@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # gameMain = Goes((gSize, gSize))
 
     gSize = (3,3)
-    gameMain = Goes(gSize, train=True)
+    gameMain = Goes(gSize, train=False)
    
     tasks = [gameMain.load(True)]
     

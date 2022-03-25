@@ -265,9 +265,7 @@ class Goes:
 
     def draw(self):
         data = self.state.data
-        sys.stdout.flush()
-        sys.stdout.write(self.simbols['boundary_x'] + '\r')
+        print(self.simbols['boundary_x'])
         for i in range(self.board_size[0]):
-            sys.stdout.write(self.simbols['boundary_y'].format(*data[i]).replace('0', self.simbols['0']).replace('-1', self.simbols['-1']).replace('1', self.simbols['1']) + '\r')
-            sys.stdout.write(self.simbols['boundary_x'] + '\r')
-        sys.stdout.flush()
+            print(self.simbols['boundary_y'].format(*data[i]).replace('0', self.simbols['0']).replace('-1', self.simbols['-1']).replace('1', self.simbols['1']))
+            print(self.simbols['boundary_x'])

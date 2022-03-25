@@ -15,7 +15,7 @@ class Player:
     def get_state(self):
         pass
 
-    def set_state(self, state):
+    def set_state(self, *args):
         pass
 
     def reset(self):
