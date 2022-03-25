@@ -152,8 +152,8 @@ class Goes:
         self.condition = GoesPredictCondition(self.states)
         GEI = GoesEstimateInitializer()
 
-        self.player1 = AI(1)
-        self.player2 = AI(-1)
+        self.player1 = AI(1, epsilon=0.01)
+        self.player2 = AI(-1, epsilon=0.01)
 
         GEI.init([self.player1, self.player2], self.states.values())
 
@@ -163,13 +163,15 @@ class Goes:
             self.player2.reset()
             sys.stdout.flush()
             ratio = int((e+1)/self.epoch * 10)
-            sys.stdout.write('[Epoch:{0}/{1}] {2}> accuracy1:{3:.3}, accuracy2:{4:.3}\r'.format(e+1,self.epoch,''.join(['='*ratio,'.'*(10-ratio)]), self.player1.accuracy, self.player2.accuracy))
+            sys.stdout.write('[Epoch:{0}/{1}] {2}> accuracy1:{3:.03}, accuracy2:{4:.03}\r'.format(e+1,self.epoch,''.join(['='*ratio,'.'*(10-ratio)]), self.player1.accuracy, self.player2.accuracy))
             sys.stdout.flush()
         sys.stdout.write('\n') 
         
         if save:
-            player = max(self.player1, self.player2, key=lambda x:x.accuracy)
-            player.save(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(*list(self.board_size))]))
+            # player = max(self.player1, self.player2, key=lambda x:x.accuracy)
+            # player.save(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(*list(self.board_size))]))
+            self.player1.save(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai{}'.format(*list(self.board_size), 1)]))
+            self.player2.save(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai{}'.format(*list(self.board_size), 2)]))
         self.set_train = False
 
     def _get_player(self, player1, player2):
@@ -183,23 +185,27 @@ class Goes:
 
         if order == '1':
             self.player1 = Player(1)
-            self.player2 = AI(-1)
-            self.player2.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(*list(self.board_size))]))
+            self.player2 = AI(-1, epsilon=0)
+            # self.player2.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(*list(self.board_size))]))
+            self.player2.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai{}'.format(*list(self.board_size), 2)]))
         else:
-            self.player1 = AI(1)
+            self.player1 = AI(1, epsilon=0)
             self.player2 = Player(-1)
-            self.player1.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(*list(self.board_size))]))
+            # self.player1.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(*list(self.board_size))]))
+            self.player1.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai{}'.format(*list(self.board_size), 1)]))
 
         self.update()
 
     def antagonist(self, epoch=500):
         self.condition = GoesPredictCondition(self.states)
         
-        self.player1 = AI(1)
-        self.player2 = AI(-1)
+        self.player1 = AI(1, epsilon=0)
+        self.player2 = AI(-1, epsilon=0)
 
-        self.player1.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(self.player1.id,*list(self.board_size))]))
-        self.player2.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(self.player1.id,*list(self.board_size))]))
+        # self.player1.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(self.player1.id,*list(self.board_size))]))
+        # self.player2.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai'.format(self.player1.id,*list(self.board_size))]))
+        self.player1.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai{}'.format(self.player1.id,*list(self.board_size), 1)]))
+        self.player2.load(''.join([os.path.dirname(__file__), '\\datas\\ai\\goes_{}{}_ai{}'.format(self.player1.id,*list(self.board_size), 2)]))
 
         for i in range(epoch):
             self.update()
@@ -208,8 +214,8 @@ class Goes:
 
     def update(self):
         self.state = GoesState()
-        self.player1.set_state(self.state)
-        self.player2.set_state(self.state)
+        self.player1.set_state(self.state, False)
+        self.player2.set_state(self.state, False)
         player = self._get_player(self.player1, self.player2)
         
         next = None
@@ -231,8 +237,8 @@ class Goes:
                 next = self.state.next(uinput, playing.id)
 
             self.state, isend = self.states[next.get_hash]
-            self.player1.set_state(self.state)
-            self.player2.set_state(self.state)
+            self.player1.set_state(self.state, True)
+            self.player2.set_state(self.state, True)
 
             if isend:
                 if self.state.winner == 0:
@@ -241,7 +247,7 @@ class Goes:
                     self.end_prompt = '玩家1获胜!'
                     if isinstance(self.player1, AI):
                         self.player1.success_one()
-                elif self.state.winner == 2:
+                elif self.state.winner == -1:
                     self.end_prompt = '玩家2获胜!'
                     if isinstance(self.player2, AI):
                         self.player2.success_one()
@@ -259,7 +265,9 @@ class Goes:
 
     def draw(self):
         data = self.state.data
-        print(self.simbols['boundary_x'])
+        sys.stdout.flush()
+        sys.stdout.write(self.simbols['boundary_x'] + '\r')
         for i in range(self.board_size[0]):
-            print(self.simbols['boundary_y'].format(*data[i]).replace('0', self.simbols['0']).replace('-1', self.simbols['-1']).replace('1', self.simbols['1']))
-            print(self.simbols['boundary_x'])
+            sys.stdout.write(self.simbols['boundary_y'].format(*data[i]).replace('0', self.simbols['0']).replace('-1', self.simbols['-1']).replace('1', self.simbols['1']) + '\r')
+            sys.stdout.write(self.simbols['boundary_x'] + '\r')
+        sys.stdout.flush()

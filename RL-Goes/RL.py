@@ -68,7 +68,7 @@ class AI:
     def get_state(self):
         return self._states
 
-    def set_state(self, state, greedy=False):
+    def set_state(self, state, greedy=True):
         if not isinstance(state, State):
             raise TypeError("state must be a State object")
         self._states.append(state)
@@ -97,7 +97,8 @@ class AI:
         
         if np.random.rand() < self.epsilon:
             i = np.random.randint(0, len(predictions))
-            self.set_state(states[i], False)
+            self._gamma[-1] *= False
+            # self.set_state(states[i], True)
             return predictions[i]
         else:
             values = []
@@ -107,7 +108,7 @@ class AI:
                 values.append((self._estimates[state.get_hash], data, state))
             np.random.shuffle(values)
             values.sort(key=lambda x:x[0], reverse=True)
-            self.set_state(values[0][2], True)
+            # self.set_state(values[0][2], True)
             return values[0][1]
 
     def reward(self, estimate2:float, estimate1:float):

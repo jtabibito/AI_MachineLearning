@@ -10,8 +10,8 @@ next_game_prompt = '输入回车开始下一局游戏，按ESC退出'
 ensure_next_game = True
 
 def main(gameMain:Goes):
-    # gameMain.train(int(1e5), True)
-    gameMain.antagonist(500)
+    gameMain.train(int(1e5), True)
+    gameMain.antagonist(50)
 
     global ensure_next_game
     while True:
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # gameMain = Goes((gSize, gSize))
 
     gSize = (3,3)
-    gameMain = Goes(gSize, train=False)
+    gameMain = Goes(gSize, train=True)
    
     tasks = [gameMain.load(True)]
     
